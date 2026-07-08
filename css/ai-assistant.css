@@ -1,0 +1,301 @@
+/* ============================================
+   Search Bharat - AI Assistant Panel
+   ============================================ */
+
+.bharat-ai {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 400px;
+  height: 100%;
+  background: rgba(14, 14, 22, 0.97);
+  backdrop-filter: blur(30px);
+  border-left: 1px solid rgba(255, 255, 255, 0.06);
+  z-index: 300;
+  transform: translateX(100%);
+  transition: transform var(--bharat-duration-slow) var(--bharat-ease-spring);
+  display: flex;
+  flex-direction: column;
+}
+
+.bharat-ai--open {
+  transform: translateX(0);
+}
+
+/* ── Header ── */
+.bharat-ai__header {
+  display: flex;
+  align-items: center;
+  padding: var(--bharat-space-md) var(--bharat-space-lg);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+  gap: var(--bharat-space-md);
+}
+
+.bharat-ai__avatar {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--bharat-accent-primary), var(--bharat-accent-tertiary));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  position: relative;
+  flex-shrink: 0;
+}
+
+.bharat-ai__avatar::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  right: 0;
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  background: var(--bharat-accent-success);
+  border: 2px solid var(--bharat-bg-primary);
+}
+
+.bharat-ai__header-info {
+  flex: 1;
+}
+
+.bharat-ai__name {
+  font-family: var(--bharat-font-display);
+  font-weight: 600;
+  font-size: var(--bharat-text-sm);
+}
+
+.bharat-ai__status {
+  font-size: var(--bharat-text-xs);
+  color: var(--bharat-accent-success);
+}
+
+.bharat-ai__close {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--bharat-radius-md);
+  border: none;
+  background: transparent;
+  color: var(--bharat-text-secondary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all var(--bharat-duration-fast);
+}
+
+.bharat-ai__close:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+/* ── Messages ── */
+.bharat-ai__messages {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--bharat-space-lg);
+  display: flex;
+  flex-direction: column;
+  gap: var(--bharat-space-md);
+}
+
+.bharat-ai__message {
+  display: flex;
+  gap: var(--bharat-space-sm);
+  animation: bharat-fade-in 0.3s var(--bharat-ease-smooth) forwards;
+}
+
+.bharat-ai__message--ai {
+  align-self: flex-start;
+}
+
+.bharat-ai__message--user {
+  align-self: flex-end;
+  flex-direction: row-reverse;
+}
+
+.bharat-ai__message-avatar {
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+}
+
+.bharat-ai__message--ai .bharat-ai__message-avatar {
+  background: linear-gradient(135deg, var(--bharat-accent-primary), var(--bharat-accent-tertiary));
+}
+
+.bharat-ai__message--user .bharat-ai__message-avatar {
+  background: var(--bharat-bg-elevated);
+}
+
+.bharat-ai__message-content {
+  max-width: 85%;
+  padding: var(--bharat-space-sm) var(--bharat-space-md);
+  border-radius: var(--bharat-radius-lg);
+  font-size: var(--bharat-text-sm);
+  line-height: 1.6;
+}
+
+.bharat-ai__message--ai .bharat-ai__message-content {
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--bharat-text-secondary);
+  border-top-left-radius: 4px;
+}
+
+.bharat-ai__message--user .bharat-ai__message-content {
+  background: linear-gradient(135deg, rgba(108, 92, 231, 0.3), rgba(108, 92, 231, 0.15));
+  border: 1px solid rgba(108, 92, 231, 0.2);
+  color: var(--bharat-text-primary);
+  border-top-right-radius: 4px;
+}
+
+/* ── Typing Indicator ── */
+.bharat-ai__typing {
+  display: flex;
+  gap: 4px;
+  padding: var(--bharat-space-sm) var(--bharat-space-md);
+}
+
+.bharat-ai__typing-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--bharat-text-tertiary);
+  animation: bharat-pulse 1.5s ease-in-out infinite;
+}
+
+.bharat-ai__typing-dot:nth-child(2) { animation-delay: 0.2s; }
+.bharat-ai__typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+/* ── Suggestions ── */
+.bharat-ai__suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--bharat-space-sm);
+  padding: var(--bharat-space-sm) 0;
+}
+
+.bharat-ai__suggestion {
+  padding: var(--bharat-space-xs) var(--bharat-space-md);
+  background: rgba(108, 92, 231, 0.1);
+  border: 1px solid rgba(108, 92, 231, 0.2);
+  border-radius: var(--bharat-radius-full);
+  color: var(--bharat-accent-secondary);
+  font-size: var(--bharat-text-xs);
+  cursor: pointer;
+  transition: all var(--bharat-duration-fast);
+}
+
+.bharat-ai__suggestion:hover {
+  background: rgba(108, 92, 231, 0.2);
+  transform: translateY(-1px);
+}
+
+/* ── Input ── */
+.bharat-ai__input-area {
+  padding: var(--bharat-space-md) var(--bharat-space-lg);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.bharat-ai__input-wrapper {
+  display: flex;
+  align-items: flex-end;
+  gap: var(--bharat-space-sm);
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: var(--bharat-radius-lg);
+  padding: var(--bharat-space-sm);
+  transition: all var(--bharat-duration-normal);
+}
+
+.bharat-ai__input-wrapper:focus-within {
+  border-color: var(--bharat-accent-primary);
+  box-shadow: 0 0 0 3px rgba(108, 92, 231, 0.1);
+}
+
+.bharat-ai__textarea {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: var(--bharat-text-primary);
+  font-family: var(--bharat-font-body);
+  font-size: var(--bharat-text-sm);
+  outline: none;
+  resize: none;
+  min-height: 20px;
+  max-height: 120px;
+  padding: var(--bharat-space-xs) var(--bharat-space-sm);
+  line-height: 1.5;
+}
+
+.bharat-ai__textarea::placeholder {
+  color: var(--bharat-text-tertiary);
+}
+
+.bharat-ai__input-actions {
+  display: flex;
+  gap: 2px;
+  flex-shrink: 0;
+}
+
+.bharat-ai__input-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--bharat-radius-md);
+  border: none;
+  background: transparent;
+  color: var(--bharat-text-tertiary);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 16px;
+  transition: all var(--bharat-duration-fast);
+}
+
+.bharat-ai__input-btn:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--bharat-text-primary);
+}
+
+.bharat-ai__input-btn--send {
+  background: var(--bharat-accent-primary);
+  color: white;
+}
+
+.bharat-ai__input-btn--send:hover {
+  background: #7d6ef0;
+  box-shadow: 0 0 15px rgba(108, 92, 231, 0.4);
+}
+
+/* ── Quick Actions ── */
+.bharat-ai__quick-actions {
+  display: flex;
+  gap: var(--bharat-space-sm);
+  padding: var(--bharat-space-sm) 0;
+}
+
+.bharat-ai__quick-action {
+  display: flex;
+  align-items: center;
+  gap: var(--bharat-space-xs);
+  padding: var(--bharat-space-xs) var(--bharat-space-sm);
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: var(--bharat-radius-sm);
+  color: var(--bharat-text-tertiary);
+  font-size: var(--bharat-text-xs);
+  cursor: pointer;
+  transition: all var(--bharat-duration-fast);
+}
+
+.bharat-ai__quick-action:hover {
+  background: rgba(255, 255, 255, 0.06);
+  color: var(--bharat-text-secondary);
+}

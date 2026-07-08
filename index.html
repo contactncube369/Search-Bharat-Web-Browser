@@ -1,0 +1,977 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="midnight">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Search Bharat - A next-generation web browser with futuristic UI, AI assistant, and offline games">
+  <title>Search Bharat - India ready 2 Search</title>
+  
+  <!-- Stylesheets -->
+  <link rel="stylesheet" href="css/core.css">
+  <link rel="stylesheet" href="css/browser.css">
+  <link rel="stylesheet" href="css/tabs.css">
+  <link rel="stylesheet" href="css/command-palette.css">
+  <link rel="stylesheet" href="css/ai-assistant.css">
+  <link rel="stylesheet" href="css/focus-mode.css">
+  <link rel="stylesheet" href="css/history.css">
+  <link rel="stylesheet" href="css/games.css">
+  <link rel="stylesheet" href="css/themes.css">
+  <link rel="stylesheet" href="css/privacy.css">
+  <link rel="stylesheet" href="css/security-dashboard.css">
+</head>
+<body>
+  <!-- Lock Screen -->
+  <div class="bharat-lockscreen" id="lockScreen">
+    <div class="bharat-lockscreen__bg"></div>
+    <div class="bharat-lockscreen__content">
+      <div class="bharat-lockscreen__logo">🔒</div>
+      <h1 class="bharat-lockscreen__title">Search Bharat</h1>
+      <p class="bharat-lockscreen__subtitle">Enter your password to unlock</p>
+      <div class="bharat-lockscreen__input-wrap">
+        <input
+          type="password"
+          class="bharat-lockscreen__input"
+          id="lockPasswordInput"
+          placeholder="Enter password..."
+          maxlength="32"
+          autocomplete="off"
+        >
+        <button class="bharat-lockscreen__submit" id="lockSubmitBtn">→</button>
+      </div>
+      <p class="bharat-lockscreen__error" id="lockError"></p>
+      <p class="bharat-lockscreen__setup" id="lockSetupHint">First time? Enter a new password to set up lock.</p>
+    </div>
+  </div>
+
+  <!-- Video Background -->
+  <video
+    id="themeBgVideo"
+    class="bharat-video-bg"
+    src="videos/indian-flag.mp4"
+    autoplay
+    loop
+    muted
+    playsinline
+  ></video>
+  <div class="bharat-video-overlay"></div>
+
+  <div class="bharat-browser" id="bharatBrowser">
+
+    <!-- Background Effects (orbs on top of video) -->
+    <div class="bharat-bg-effects">
+      <div class="bharat-bg-orb bharat-bg-orb--purple"></div>
+      <div class="bharat-bg-orb bharat-bg-orb--teal"></div>
+      <div class="bharat-bg-orb bharat-bg-orb--pink"></div>
+      <div class="bharat-bg-grid"></div>
+    </div>
+
+    <!-- Loading Bar -->
+    <div class="bharat-loading-bar" id="loadingBar" style="width: 0%; display: none;"></div>
+
+    <!-- Title Bar -->
+    <div class="bharat-titlebar">
+      <div class="bharat-titlebar__logo">
+        <div class="bharat-titlebar__logo-icon"></div>
+        <span class="gradient-text">Search Bharat</span>
+        <span style="color: var(--bharat-text-tertiary); font-size: 10px; font-weight: 400;">v1.0</span>
+      </div>
+      <div class="bharat-titlebar__controls">
+        <button class="bharat-titlebar__btn bharat-titlebar__btn--minimize" data-tooltip="Minimize" id="winMinBtn"></button>
+        <button class="bharat-titlebar__btn bharat-titlebar__btn--maximize" data-tooltip="Maximize" id="winMaxBtn"></button>
+        <button class="bharat-titlebar__btn bharat-titlebar__btn--close" data-tooltip="Close" id="winCloseBtn"></button>
+      </div>
+    </div>
+
+    <!-- Tab Bar -->
+    <div class="bharat-tabbar" id="tabBar">
+      <div class="bharat-tabbar__scroll" id="tabScroll">
+        <!-- Tabs inserted dynamically -->
+      </div>
+      <button class="bharat-tabbar__new" id="newTabBtn" data-tooltip="New Tab (Ctrl+T)">+</button>
+      <button class="bharat-btn bharat-btn-icon bharat-tabbar__3d-toggle" id="toggle3DTabs" data-tooltip="3D Tab View">
+        ⊞
+      </button>
+    </div>
+
+    <!-- Navigation Bar -->
+    <div class="bharat-navbar" id="navBar">
+      <div class="bharat-navbar__nav-btns">
+        <button class="bharat-navbar__btn bharat-navbar__btn--disabled" id="backBtn" data-tooltip="Back">←</button>
+        <button class="bharat-navbar__btn bharat-navbar__btn--disabled" id="forwardBtn" data-tooltip="Forward">→</button>
+        <button class="bharat-navbar__btn" id="refreshBtn" data-tooltip="Refresh">⟳</button>
+        <button class="bharat-navbar__btn" id="homeBtn" data-tooltip="Home">⌂</button>
+      </div>
+
+      <div class="bharat-urlbar" id="urlBar">
+        <span class="bharat-urlbar__security bharat-urlbar__security--secure" id="securityIcon">🔒</span>
+        <input 
+          type="text" 
+          class="bharat-urlbar__input" 
+          id="urlInput" 
+          placeholder="Search or enter URL — Ctrl+L to focus"
+          spellcheck="false"
+          autocomplete="off"
+        >
+        <div class="bharat-urlbar__risk-badge" id="urlRiskBadge" data-tooltip="Security Risk Score"></div>
+        <div class="bharat-urlbar__actions">
+          <button class="bharat-urlbar__action" id="bookmarkBtn" data-tooltip="Bookmark">☆</button>
+
+        </div>
+        
+        <!-- Search Suggestions Dropdown -->
+        <div class="bharat-search-suggestions" id="searchSuggestions" style="display: none;">
+          <!-- Suggestions populated by JS -->
+        </div>
+      </div>
+
+      <div class="bharat-navbar__actions">
+        <button class="bharat-navbar__btn" id="focusModeBtn" data-tooltip="Focus Mode (F11)">👁</button>
+        <button class="bharat-navbar__btn" id="splitViewBtn" data-tooltip="Split View">⊟</button>
+        <button class="bharat-navbar__btn" id="historyBtn" data-tooltip="History (Ctrl+H)">🕒</button>
+        <button class="bharat-navbar__btn" id="screenshotNavBtn" data-tooltip="Screenshot" onclick="bharatApp.takeScreenshot()">📸</button>
+        <button class="bharat-navbar__btn bharat-navbar__btn--incognito" id="incognitoBtn" data-tooltip="Incognito Mode (Ctrl+Shift+N)">🕵️</button>
+        <button class="bharat-navbar__btn bharat-navbar__btn--shield" id="shieldBtn" data-tooltip="Bharat Shield Security">🛡️</button>
+        <button class="bharat-navbar__btn" id="aiAssistantBtn" data-tooltip="AI Assistant (Ctrl+J)">✨</button>
+        <button class="bharat-navbar__btn" id="settingsBtn" data-tooltip="Settings">⚙</button>
+        <button class="bharat-navbar__btn" id="devToolsBtn" data-tooltip="Developer Tools (F12)">🛠️</button>
+        <button class="bharat-navbar__btn" id="menuBtn" data-tooltip="Menu">☰</button>
+      </div>
+    </div>
+
+    <!-- Main Content Area -->
+    <div class="bharat-content" id="contentArea">
+
+      <!-- Webview Container — Real Chromium Renderer Processes -->
+      <div class="bharat-webview-container" id="webviewContainer" style="display:none; position:absolute; top:0; left:0; right:0; bottom:0; z-index:1;">
+        <!-- Webviews are created dynamically per tab -->
+      </div>
+      
+      <!-- New Tab Page -->
+      <div class="bharat-newtab bharat-newtab--active" id="newTabPage">
+        <div class="bharat-newtab__hero">
+          <img src="icon.png" class="bharat-newtab__logo-img" alt="Browser Logo">
+          <h1 class="bharat-newtab__title gradient-text">Search Bharat</h1>
+          <p class="bharat-newtab__subtitle">India ready 2 search</p>
+        </div>
+
+        <div class="bharat-newtab__search">
+          <div class="bharat-newtab__searchbar">
+            <span class="bharat-newtab__searchbar-icon">🔍</span>
+            <input 
+              type="text" 
+              class="bharat-newtab__searchbar-input" 
+              id="searchInput"
+              placeholder="Search the web or enter a URL..."
+            >
+            <div class="bharat-newtab__searchbar-actions">
+
+            </div>
+          </div>
+        </div>
+
+        <div class="bharat-newtab__shortcuts" id="shortcuts">
+          <!-- Quick links -->
+        </div>
+
+        <div class="bharat-newtab__features" id="featureCards">
+          <div class="bharat-feature-card" onclick="bharatApp.openGameCenter()">
+            <div class="bharat-feature-card__icon">🎮</div>
+            <div class="bharat-feature-card__title">Game Center</div>
+            <div class="bharat-feature-card__desc">Play offline games when you're bored</div>
+          </div>
+          <div class="bharat-feature-card" onclick="bharatApp.toggleAI()">
+            <div class="bharat-feature-card__icon">✨</div>
+            <div class="bharat-feature-card__title">AI Assistant</div>
+            <div class="bharat-feature-card__desc">Get help with anything, anytime</div>
+          </div>
+          <div class="bharat-feature-card" onclick="bharatApp.openSettings()">
+            <div class="bharat-feature-card__icon">🛡️</div>
+            <div class="bharat-feature-card__title">Privacy Center</div>
+            <div class="bharat-feature-card__desc">Control your data and security</div>
+          </div>
+        </div>
+
+        <!-- Clock + Greeting -->
+        <div style="margin-top: auto; text-align: center; padding: 20px; opacity: 0.5;">
+          <div id="clock" style="font-family: var(--bharat-font-mono); font-size: 2.5rem; font-weight: 300; letter-spacing: 4px;"></div>
+          <div id="greeting" style="font-size: var(--bharat-text-sm); color: var(--bharat-text-tertiary); margin-top: 4px;"></div>
+        </div>
+      </div>
+
+      <!-- Game Center Page -->
+      <div class="bharat-games" id="gameCenter">
+        <button class="bharat-games__back" onclick="bharatApp.closeGameCenter()">← Back to browsing</button>
+        <div class="bharat-games__bg">
+          <div class="bharat-games__stars"></div>
+        </div>
+        <div class="bharat-games__header">
+          <h2 class="bharat-games__title gradient-text">🎮 Game Center</h2>
+          <p class="bharat-games__subtitle">Offline games — No internet required</p>
+        </div>
+        <div class="bharat-games__grid">
+          <div class="bharat-game-card" onclick="bharatApp.launchGame('runner')">
+            <div class="bharat-game-card__preview bharat-game-card__preview--runner">
+              <div class="bharat-game-card__preview-glow"></div>
+              <div class="bharat-game-card__preview-art">🚀</div>
+              <span class="bharat-game-card__badge bharat-game-card__badge--popular">Featured</span>
+            </div>
+            <div class="bharat-game-card__info">
+              <div class="bharat-game-card__name">Flying Helicopter</div>
+              <div class="bharat-game-card__desc">Fly through space, dodge asteroids, and defy gravity in this endless runner</div>
+              <div class="bharat-game-card__meta">
+                <div class="bharat-game-card__tags">
+                  <span class="bharat-game-card__tag">Endless</span>
+                  <span class="bharat-game-card__tag">Action</span>
+                </div>
+                <button class="bharat-game-card__play-btn">▶</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="bharat-game-card" onclick="bharatApp.launchGame('puzzle')">
+            <div class="bharat-game-card__preview bharat-game-card__preview--puzzle">
+              <div class="bharat-game-card__preview-glow"></div>
+              <div class="bharat-game-card__preview-art">🧩</div>
+              <span class="bharat-game-card__badge bharat-game-card__badge--new">New</span>
+            </div>
+            <div class="bharat-game-card__info">
+              <div class="bharat-game-card__name">Bharat Puzzle</div>
+              <div class="bharat-game-card__desc">Match colors and clear blocks in this addictive pattern-matching puzzle</div>
+              <div class="bharat-game-card__meta">
+                <div class="bharat-game-card__tags">
+                  <span class="bharat-game-card__tag">Puzzle</span>
+                  <span class="bharat-game-card__tag">Casual</span>
+                </div>
+                <button class="bharat-game-card__play-btn">▶</button>
+              </div>
+            </div>
+          </div>
+
+          <div class="bharat-game-card" onclick="bharatApp.launchGame('strategy')">
+            <div class="bharat-game-card__preview bharat-game-card__preview--strategy">
+              <div class="bharat-game-card__preview-glow"></div>
+              <div class="bharat-game-card__preview-art">⚔️</div>
+            </div>
+            <div class="bharat-game-card__info">
+              <div class="bharat-game-card__name">Space Strategy</div>
+              <div class="bharat-game-card__desc">Build your fleet, defend your base, and conquer the galaxy</div>
+              <div class="bharat-game-card__meta">
+                <div class="bharat-game-card__tags">
+                  <span class="bharat-game-card__tag">Strategy</span>
+                  <span class="bharat-game-card__tag">Tower Defense</span>
+                </div>
+                <button class="bharat-game-card__play-btn">▶</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Game View (shared) -->
+      <div class="bharat-game-view" id="gameView">
+        <div class="bharat-game-view__header">
+          <button class="bharat-game-view__back" id="gameBackBtn">← Back</button>
+          <div class="bharat-game-view__title" id="gameTitle">Game</div>
+          <div class="bharat-game-view__score">
+            <div>
+              <div class="bharat-game-view__score-label">Score</div>
+              <div class="bharat-game-view__score-value" id="gameScore">0</div>
+            </div>
+            <div>
+              <div class="bharat-game-view__score-label">Best</div>
+              <div class="bharat-game-view__score-value" id="gameBest">0</div>
+            </div>
+          </div>
+        </div>
+        <div class="bharat-game-view__canvas-wrapper" id="gameCanvasWrapper">
+          <canvas class="bharat-game-view__canvas" id="gameCanvas"></canvas>
+        </div>
+        <div class="bharat-game-over" id="gameOver">
+          <div class="bharat-game-over__content">
+            <div class="bharat-game-over__title gradient-text">Game Over</div>
+            <div class="bharat-game-over__score" id="gameOverScore">Score: 0</div>
+            <div class="bharat-game-over__best" id="gameOverBest">Best: 0</div>
+            <div class="bharat-game-over__actions">
+              <button class="bharat-btn bharat-btn-primary" id="gameRetryBtn">🔄 Play Again</button>
+              <button class="bharat-btn" id="gameExitBtn">Exit</button>
+            </div>
+          </div>
+        </div>
+        <div class="bharat-game-pause" id="gamePause">
+          <div class="bharat-game-pause__text gradient-text">⏸ PAUSED</div>
+        </div>
+      </div>
+
+      <!-- History Page -->
+      <div class="bharat-history" id="historyPage">
+        <div class="bharat-history__header">
+          <h2 class="bharat-history__title gradient-text">🕒 History</h2>
+          <div class="bharat-history__controls">
+            <div class="bharat-history__search-wrap">
+              <span class="bharat-history__search-icon">🔍</span>
+              <input type="text" class="bharat-history__search" id="historySearchInput" placeholder="Search history...">
+            </div>
+            <button class="bharat-history__clear-btn" onclick="bharatApp.historyManager.clearAll()">Clear History</button>
+          </div>
+        </div>
+        <div class="bharat-history__list" id="historyList">
+          <!-- History items injected by JS -->
+        </div>
+      </div>
+
+      <!-- Settings Page -->
+      <div class="bharat-settings" id="settingsPage">
+        <div class="bharat-settings__header">
+          <h2 class="bharat-settings__title">⚙ Settings</h2>
+          <p class="bharat-settings__subtitle">Customize your Search Bharat experience</p>
+        </div>
+
+        <!-- AI Configuration Section -->
+        <div class="bharat-settings__section">
+          <div class="bharat-settings__section-title">✨ AI Configuration</div>
+          <div class="bharat-settings__card">
+            <div class="bharat-settings__row" style="flex-direction: column; align-items: flex-start; gap: 12px;">
+              <div>
+                <div class="bharat-settings__label">Gemini API Key</div>
+                <div class="bharat-settings__desc">Enter your Google Gemini API key to unlock the full power of Bharat AI. You can get a free key from <a href="#" onclick="bharatApp.openUrlInNewTab('https://aistudio.google.com/app/apikey')" style="color:var(--bharat-accent-primary);">Google AI Studio</a>.</div>
+              </div>
+              <div style="display: flex; gap: 8px; width: 100%;">
+                <input type="password" id="geminiApiKeyInput" placeholder="AIzaSy..." style="flex: 1; padding: 10px 16px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.1); background: rgba(255,255,255,0.05); color: #fff; font-family: 'Inter'; outline: none;">
+                <button class="bharat-btn bharat-btn-primary" onclick="bharatApp.saveApiKey()" style="padding: 10px 24px; border-radius: 8px;">Save Key</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Theme Section -->
+        <div class="bharat-settings__section">
+          <div class="bharat-settings__section-title">🎨 Appearance</div>
+          <div class="bharat-settings__card">
+            <div class="bharat-settings__row">
+              <div>
+                <div class="bharat-settings__label">Dynamic Theme</div>
+                <div class="bharat-settings__desc">Automatically adapt theme to time of day</div>
+              </div>
+              <button class="bharat-toggle bharat-toggle--active" id="dynamicThemeToggle" onclick="bharatApp.themeEngine.toggleDynamic()"></button>
+            </div>
+            <div class="bharat-settings__row" style="flex-direction: column; align-items: flex-start; gap: 12px;">
+              <div class="bharat-settings__label">Manual Theme Selection</div>
+              <div class="bharat-theme-picker" id="themePicker">
+                <div class="bharat-theme-swatch bharat-theme-swatch--indian-flag bharat-theme-swatch--active" onclick="bharatApp.themeEngine.setTheme('indian-flag')" data-theme="indian-flag">
+                  <span class="bharat-theme-swatch__label">Flag</span>
+                </div>
+                <div class="bharat-theme-swatch bharat-theme-swatch--india-map" onclick="bharatApp.themeEngine.setTheme('india-map')" data-theme="india-map">
+                  <span class="bharat-theme-swatch__label">Map</span>
+                </div>
+                <div class="bharat-theme-swatch bharat-theme-swatch--bharat-mata" onclick="bharatApp.themeEngine.setTheme('bharat-mata')" data-theme="bharat-mata">
+                  <span class="bharat-theme-swatch__label">Mata</span>
+                </div>
+                <div class="bharat-theme-swatch bharat-theme-swatch--greenery-of-india" onclick="bharatApp.themeEngine.setTheme('greenery-of-india')" data-theme="greenery-of-india">
+                  <span class="bharat-theme-swatch__label">Green</span>
+                </div>
+                <div class="bharat-theme-swatch bharat-theme-swatch--mountains-of-india" onclick="bharatApp.themeEngine.setTheme('mountains-of-india')" data-theme="mountains-of-india">
+                  <span class="bharat-theme-swatch__label">Himalaya</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Privacy Section -->
+        <div class="bharat-settings__section">
+          <div class="bharat-settings__section-title">🛡️ Privacy & Security</div>
+          
+          <div class="bharat-privacy-stats">
+            <div class="bharat-privacy-stat">
+              <div class="bharat-privacy-stat__value gradient-text" id="trackersBlocked">2,847</div>
+              <div class="bharat-privacy-stat__label">Trackers Blocked</div>
+            </div>
+            <div class="bharat-privacy-stat">
+              <div class="bharat-privacy-stat__value gradient-text-hot" id="adsBlocked">1,293</div>
+              <div class="bharat-privacy-stat__label">Ads Blocked</div>
+            </div>
+            <div class="bharat-privacy-stat">
+              <div class="bharat-privacy-stat__value" style="color: var(--bharat-accent-success);" id="httpsUpgrades">456</div>
+              <div class="bharat-privacy-stat__label">HTTPS Upgrades</div>
+            </div>
+          </div>
+
+          <div class="bharat-settings__card">
+            <div class="bharat-settings__row">
+              <div>
+                <div class="bharat-settings__label">Tracker Blocker</div>
+                <div class="bharat-settings__desc">Block known tracking scripts and pixels</div>
+              </div>
+              <button class="bharat-toggle bharat-toggle--active" id="trackerToggle"></button>
+            </div>
+            <div class="bharat-settings__row">
+              <div>
+                <div class="bharat-settings__label">Ad Blocker</div>
+                <div class="bharat-settings__desc">Remove intrusive advertisements</div>
+              </div>
+              <button class="bharat-toggle bharat-toggle--active" id="adToggle"></button>
+            </div>
+            <div class="bharat-settings__row">
+              <div>
+                <div class="bharat-settings__label">HTTPS Enforcement</div>
+                <div class="bharat-settings__desc">Automatically upgrade to secure connections</div>
+              </div>
+              <button class="bharat-toggle bharat-toggle--active" id="httpsToggle"></button>
+            </div>
+            <div class="bharat-settings__row">
+              <div>
+                <div class="bharat-settings__label">Phishing Detection</div>
+                <div class="bharat-settings__desc">AI-powered detection of suspicious websites</div>
+              </div>
+              <button class="bharat-toggle bharat-toggle--active" id="phishingToggle"></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Performance Section -->
+        <div class="bharat-settings__section">
+          <div class="bharat-settings__section-title">⚡ Performance</div>
+          <div class="bharat-settings__card">
+            <div class="bharat-settings__row">
+              <div>
+                <div class="bharat-settings__label">Tab Suspension</div>
+                <div class="bharat-settings__desc">Suspend inactive tabs to save memory</div>
+              </div>
+              <button class="bharat-toggle bharat-toggle--active" id="suspendToggle"></button>
+            </div>
+            <div class="bharat-settings__row">
+              <div>
+                <div class="bharat-settings__label">GPU Acceleration</div>
+                <div class="bharat-settings__desc">Use hardware acceleration for rendering</div>
+              </div>
+              <button class="bharat-toggle bharat-toggle--active" id="gpuToggle"></button>
+            </div>
+            <div class="bharat-settings__row">
+              <div>
+                <div class="bharat-settings__label">Predictive Preloading</div>
+                <div class="bharat-settings__desc">Preload likely-next pages for instant loading</div>
+              </div>
+              <button class="bharat-toggle" id="preloadToggle"></button>
+            </div>
+          </div>
+        </div>
+
+        <!-- VPN Section -->
+        <div class="bharat-settings__section">
+          <div class="bharat-settings__section-title">🛡️ VPN — Hide Your IP</div>
+          <div class="bharat-vpn-panel" id="vpnPanel">
+            <div class="bharat-vpn-panel__status">
+              <div class="bharat-vpn-panel__shield bharat-vpn-panel__shield--off" id="vpnShield">🛡️</div>
+              <div class="bharat-vpn-panel__label" id="vpnStatusLabel">VPN Disconnected</div>
+              <div class="bharat-vpn-panel__ip" id="vpnIpDisplay">IP: Detecting...</div>
+            </div>
+            <button class="bharat-vpn-panel__btn bharat-vpn-panel__btn--connect" id="vpnToggleBtn" onclick="bharatApp.toggleVPN()">
+              🔌 Connect VPN
+            </button>
+            <div class="bharat-vpn-panel__locations">
+              <span class="bharat-vpn-panel__location bharat-vpn-panel__location--active" data-proxy="us" onclick="bharatApp.setVPNLocation(this)">🇺🇸 US</span>
+              <span class="bharat-vpn-panel__location" data-proxy="uk" onclick="bharatApp.setVPNLocation(this)">🇬🇧 UK</span>
+              <span class="bharat-vpn-panel__location" data-proxy="de" onclick="bharatApp.setVPNLocation(this)">🇩🇪 Germany</span>
+              <span class="bharat-vpn-panel__location" data-proxy="jp" onclick="bharatApp.setVPNLocation(this)">🇯🇵 Japan</span>
+              <span class="bharat-vpn-panel__location" data-proxy="sg" onclick="bharatApp.setVPNLocation(this)">🇸🇬 Singapore</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Extension Store Section -->
+        <div class="bharat-settings__section">
+          <div class="bharat-settings__section-title">🧩 Extensions</div>
+          <div class="bharat-extensions-grid" id="extensionsGrid">
+            <!-- Dark Mode -->
+            <div class="bharat-extension-card">
+              <div class="bharat-extension-card__header">
+                <div class="bharat-extension-card__icon" style="background: rgba(108,92,231,0.15);">🌙</div>
+                <div>
+                  <div class="bharat-extension-card__name">Dark Mode</div>
+                  <div class="bharat-extension-card__author">by Search Bharat</div>
+                </div>
+              </div>
+              <div class="bharat-extension-card__desc">Force dark mode on every website for comfortable night browsing</div>
+              <div class="bharat-extension-card__footer">
+                <span class="bharat-extension-card__status bharat-extension-card__status--inactive" id="extDarkModeStatus">Disabled</span>
+                <button class="bharat-toggle" id="extDarkModeToggle" onclick="bharatApp.toggleExtension('darkMode')"></button>
+              </div>
+            </div>
+
+            <!-- Ad Blocker Pro -->
+            <div class="bharat-extension-card">
+              <div class="bharat-extension-card__header">
+                <div class="bharat-extension-card__icon" style="background: rgba(255,107,107,0.15);">🚫</div>
+                <div>
+                  <div class="bharat-extension-card__name">Ad Blocker Pro</div>
+                  <div class="bharat-extension-card__author">by Search Bharat</div>
+                </div>
+              </div>
+              <div class="bharat-extension-card__desc">Block all ads, popups, and annoying banners across all sites</div>
+              <div class="bharat-extension-card__footer">
+                <span class="bharat-extension-card__status bharat-extension-card__status--active" id="extAdBlockStatus">Active</span>
+                <button class="bharat-toggle bharat-toggle--active" id="extAdBlockToggle" onclick="bharatApp.toggleExtension('adBlock')"></button>
+              </div>
+            </div>
+
+            <!-- Privacy Guard -->
+            <div class="bharat-extension-card">
+              <div class="bharat-extension-card__header">
+                <div class="bharat-extension-card__icon" style="background: rgba(0,184,148,0.15);">🔐</div>
+                <div>
+                  <div class="bharat-extension-card__name">Privacy Guard</div>
+                  <div class="bharat-extension-card__author">by Search Bharat</div>
+                </div>
+              </div>
+              <div class="bharat-extension-card__desc">Block trackers, cookies, and fingerprinting scripts</div>
+              <div class="bharat-extension-card__footer">
+                <span class="bharat-extension-card__status bharat-extension-card__status--active" id="extPrivacyStatus">Active</span>
+                <button class="bharat-toggle bharat-toggle--active" id="extPrivacyToggle" onclick="bharatApp.toggleExtension('privacyGuard')"></button>
+              </div>
+            </div>
+
+            <!-- HTTPS Everywhere -->
+            <div class="bharat-extension-card">
+              <div class="bharat-extension-card__header">
+                <div class="bharat-extension-card__icon" style="background: rgba(253,203,110,0.15);">🔒</div>
+                <div>
+                  <div class="bharat-extension-card__name">HTTPS Everywhere</div>
+                  <div class="bharat-extension-card__author">by Search Bharat</div>
+                </div>
+              </div>
+              <div class="bharat-extension-card__desc">Force all connections to use encrypted HTTPS</div>
+              <div class="bharat-extension-card__footer">
+                <span class="bharat-extension-card__status bharat-extension-card__status--active" id="extHttpsStatus">Active</span>
+                <button class="bharat-toggle bharat-toggle--active" id="extHttpsToggle" onclick="bharatApp.toggleExtension('httpsEverywhere')"></button>
+              </div>
+            </div>
+
+            <!-- Script Blocker -->
+            <div class="bharat-extension-card">
+              <div class="bharat-extension-card__header">
+                <div class="bharat-extension-card__icon" style="background: rgba(255,159,243,0.15);">⚡</div>
+                <div>
+                  <div class="bharat-extension-card__name">Script Blocker</div>
+                  <div class="bharat-extension-card__author">by Search Bharat</div>
+                </div>
+              </div>
+              <div class="bharat-extension-card__desc">Block JavaScript execution on suspicious websites</div>
+              <div class="bharat-extension-card__footer">
+                <span class="bharat-extension-card__status bharat-extension-card__status--inactive" id="extScriptStatus">Disabled</span>
+                <button class="bharat-toggle" id="extScriptToggle" onclick="bharatApp.toggleExtension('scriptBlocker')"></button>
+              </div>
+            </div>
+
+            <!-- Cookie Manager -->
+            <div class="bharat-extension-card">
+              <div class="bharat-extension-card__header">
+                <div class="bharat-extension-card__icon" style="background: rgba(0,206,201,0.15);">🍪</div>
+                <div>
+                  <div class="bharat-extension-card__name">Cookie Manager</div>
+                  <div class="bharat-extension-card__author">by Search Bharat</div>
+                </div>
+              </div>
+              <div class="bharat-extension-card__desc">Auto-reject cookie popups and delete tracking cookies</div>
+              <div class="bharat-extension-card__footer">
+                <span class="bharat-extension-card__status bharat-extension-card__status--inactive" id="extCookieStatus">Disabled</span>
+                <button class="bharat-toggle" id="extCookieToggle" onclick="bharatApp.toggleExtension('cookieManager')"></button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Advanced Privacy Section -->
+        <div class="bharat-settings__section">
+          <div class="bharat-settings__section-title">🔬 Advanced Privacy</div>
+          <div class="bharat-settings__card">
+            <div class="bharat-settings__row">
+              <div>
+                <div class="bharat-settings__label">Fingerprint Protection</div>
+                <div class="bharat-settings__desc">Randomize browser fingerprint to prevent tracking</div>
+              </div>
+              <button class="bharat-toggle bharat-toggle--active" id="fingerprintToggle" onclick="bharatApp.togglePrivacy('fingerprint')"></button>
+            </div>
+            <div class="bharat-settings__row">
+              <div>
+                <div class="bharat-settings__label">WebRTC Leak Prevention</div>
+                <div class="bharat-settings__desc">Prevent your real IP from leaking via WebRTC</div>
+              </div>
+              <button class="bharat-toggle bharat-toggle--active" id="webrtcToggle" onclick="bharatApp.togglePrivacy('webrtc')"></button>
+            </div>
+            <div class="bharat-settings__row">
+              <div>
+                <div class="bharat-settings__label">DNS-over-HTTPS</div>
+                <div class="bharat-settings__desc">Encrypt DNS queries for private browsing</div>
+              </div>
+              <button class="bharat-toggle bharat-toggle--active" id="dohToggle" onclick="bharatApp.togglePrivacy('doh')"></button>
+            </div>
+            <div class="bharat-settings__row">
+              <div>
+                <div class="bharat-settings__label">Do Not Track</div>
+                <div class="bharat-settings__desc">Send DNT headers to all websites</div>
+              </div>
+              <button class="bharat-toggle bharat-toggle--active" id="dntToggle" onclick="bharatApp.togglePrivacy('dnt')"></button>
+            </div>
+            <div class="bharat-settings__row">
+              <div>
+                <div class="bharat-settings__label">Password Lock</div>
+                <div class="bharat-settings__desc">Require password to open the browser</div>
+              </div>
+              <button class="bharat-toggle bharat-toggle--active" id="passwordLockToggle" onclick="bharatApp.togglePrivacy('passwordLock')"></button>
+            </div>
+            <div class="bharat-settings__row">
+              <div>
+                <div class="bharat-settings__label">Change Password</div>
+                <div class="bharat-settings__desc">Update your browser lock password</div>
+              </div>
+              <button class="bharat-btn" onclick="bharatApp.changePassword()" style="font-size:0.8rem;">🔑 Change</button>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Security Dashboard Page -->
+      <div class="bharat-security" id="securityDashboard">
+        <div class="bharat-security__header">
+          <h2 class="bharat-security__title gradient-text">🛡️ Bharat Shield — Security Center</h2>
+          <p class="bharat-security__subtitle">AI-powered security protecting your browsing experience</p>
+        </div>
+
+        <!-- Top Stats -->
+        <div class="bharat-security__stats">
+          <div class="bharat-security__stat-card bharat-security__stat-card--info">
+            <span class="bharat-security__stat-icon">🔍</span>
+            <span class="bharat-security__stat-value gradient-text" id="shieldScanCount">0</span>
+            <span class="bharat-security__stat-label">URLs Scanned</span>
+          </div>
+          <div class="bharat-security__stat-card bharat-security__stat-card--danger">
+            <span class="bharat-security__stat-icon">🚫</span>
+            <span class="bharat-security__stat-value" style="color:#ff6b6b" id="shieldThreatsBlocked">0</span>
+            <span class="bharat-security__stat-label">Threats Blocked</span>
+          </div>
+          <div class="bharat-security__stat-card bharat-security__stat-card--safe">
+            <span class="bharat-security__stat-icon">📥</span>
+            <span class="bharat-security__stat-value" style="color:#00b894" id="shieldDownloadsScanned">0</span>
+            <span class="bharat-security__stat-label">Downloads Scanned</span>
+          </div>
+          <div class="bharat-security__stat-card bharat-security__stat-card--warn">
+            <span class="bharat-security__stat-icon">🔐</span>
+            <span class="bharat-security__stat-value" style="color:#fdcb6e" id="shieldPermissionsAnalyzed">0</span>
+            <span class="bharat-security__stat-label">Permissions Analyzed</span>
+          </div>
+        </div>
+
+        <!-- Score + Protections Row -->
+        <div class="bharat-security__score-section">
+          <!-- Security Score Gauge -->
+          <div class="bharat-security__gauge-wrap">
+            <div class="bharat-security__gauge">
+              <svg viewBox="0 0 160 160">
+                <circle class="bharat-security__gauge-bg" cx="80" cy="80" r="72"></circle>
+                <circle class="bharat-security__gauge-fill bharat-security__gauge-fill--safe" id="securityGaugeFill" cx="80" cy="80" r="72" style="stroke-dasharray:452.39;stroke-dashoffset:452.39;"></circle>
+              </svg>
+              <div class="bharat-security__gauge-text">
+                <div class="bharat-security__gauge-score bharat-security__gauge-score--safe" id="securityGaugeScore">0</div>
+                <div class="bharat-security__gauge-label">Security Score</div>
+              </div>
+            </div>
+            <div class="bharat-security__gauge-status bharat-security__gauge-status--safe" id="securityGaugeStatus">Analyzing...</div>
+          </div>
+
+          <!-- Active Protections -->
+          <div class="bharat-security__protections">
+            <div class="bharat-security__protections-title">🛡️ Active Protections</div>
+            <div id="shieldProtectionsList">
+              <!-- Rendered by JS -->
+            </div>
+          </div>
+        </div>
+
+        <!-- Current URL Risk Analysis -->
+        <div class="bharat-security__section">
+          <div class="bharat-security__section-title">
+            🔍 Current Page Risk Analysis
+            <button class="bharat-btn" onclick="bharatApp.securityDashboard.runAiInspector()" style="margin-left:auto;font-size:12px;padding:6px 12px;background:rgba(108, 92, 231, 0.2);color:#6c5ce7;border:1px solid rgba(108, 92, 231, 0.3);">🤖 Run AI Inspector</button>
+          </div>
+          <div id="shieldCurrentRisk">
+            <!-- Rendered by JS -->
+          </div>
+          <div id="aiInspectorResult" style="margin-top:16px;padding:16px;background:rgba(0,0,0,0.2);border-radius:12px;display:none;border:1px solid rgba(108, 92, 231, 0.3);">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+        <!-- Threat Log -->
+        <div class="bharat-security__section">
+          <div class="bharat-security__section-title">📋 Threat Log
+            <button class="bharat-btn" onclick="bharatApp.clearThreatLog()" style="margin-left:auto;font-size:11px;padding:4px 12px;border-radius:8px;background:rgba(255,255,255,0.05);border:1px solid rgba(255,255,255,0.08);color:var(--bharat-text-tertiary);cursor:pointer;">Clear Log</button>
+          </div>
+          <div class="bharat-security__threat-log" id="shieldThreatLog">
+            <!-- Rendered by JS -->
+          </div>
+        </div>
+
+      </div>
+
+      <!-- Focus Mode Overlay -->
+      <div class="bharat-focus-overlay" id="focusOverlay"></div>
+
+      <!-- AI Assistant Panel -->
+      <div class="bharat-ai" id="aiPanel">
+        <div class="bharat-ai__header">
+          <div class="bharat-ai__avatar">✨</div>
+          <div class="bharat-ai__header-info">
+            <div class="bharat-ai__name">Bharat AI</div>
+            <div class="bharat-ai__status">Online • Ready to help</div>
+          </div>
+          <button class="bharat-ai__close" id="aiCloseBtn">✕</button>
+        </div>
+        <div class="bharat-ai__messages" id="aiMessages">
+          <div class="bharat-ai__message bharat-ai__message--ai">
+            <div class="bharat-ai__message-avatar">✨</div>
+            <div class="bharat-ai__message-content">
+              Hey there! 👋 I'm Bharat AI, your browser assistant. I can help you with:
+              <div class="bharat-ai__suggestions" style="margin-top: 8px;">
+                <span class="bharat-ai__suggestion" onclick="bharatApp.aiSuggest('Summarize this page')">📝 Summarize page</span>
+                <span class="bharat-ai__suggestion" onclick="bharatApp.aiSuggest('Find similar sites')">🔍 Find similar</span>
+                <span class="bharat-ai__suggestion" onclick="bharatApp.aiSuggest('Translate page')">🌐 Translate</span>
+                <span class="bharat-ai__suggestion" onclick="bharatApp.aiSuggest('What can you do?')">❓ Capabilities</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="bharat-ai__input-area">
+          <div class="bharat-ai__quick-actions">
+            <span class="bharat-ai__quick-action" onclick="bharatApp.aiSuggest('Summarize')">📝 Summarize</span>
+            <span class="bharat-ai__quick-action" onclick="bharatApp.aiSuggest('Explain')">💡 Explain</span>
+            <span class="bharat-ai__quick-action" onclick="bharatApp.aiSuggest('Research')">🔬 Research</span>
+          </div>
+          <div class="bharat-ai__input-wrapper">
+            <textarea 
+              class="bharat-ai__textarea" 
+              id="aiInput" 
+              placeholder="Ask Nova anything..." 
+              rows="1"
+            ></textarea>
+            <div class="bharat-ai__input-actions">
+
+              <button class="bharat-ai__input-btn bharat-ai__input-btn--send" id="aiSendBtn">➤</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Status Bar -->
+    <div class="bharat-statusbar" id="statusBar">
+      <div class="bharat-statusbar__left">
+        <div class="bharat-statusbar__item">
+          <span class="bharat-statusbar__dot bharat-statusbar__dot--online" id="statusDot"></span>
+          <span id="statusText">Ready</span>
+        </div>
+      </div>
+      <div class="bharat-statusbar__right">
+        <div class="bharat-statusbar__item" id="memoryUsage">
+          <span>Memory: 142 MB</span>
+        </div>
+        <div class="bharat-statusbar__item" id="tabCount">
+          <span>1 tab</span>
+        </div>
+        <div class="bharat-statusbar__item">
+          <span>Ctrl+K: Command Palette</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3D Tab View -->
+    <div class="bharat-3d-tabs" id="tabs3DView">
+      <div class="bharat-3d-tabs__header">
+        <div class="bharat-3d-tabs__title gradient-text">Tab Overview</div>
+        <div class="bharat-3d-tabs__count" id="tabs3DCount">0 tabs open</div>
+      </div>
+      <div class="bharat-3d-tabs__container bharat-3d-tabs--grid" id="tabs3DContainer">
+        <!-- 3D tab cards inserted dynamically -->
+      </div>
+    </div>
+
+    <!-- Command Palette -->
+    <div class="bharat-command-palette" id="commandPalette">
+      <div class="bharat-command-palette__container">
+        <div class="bharat-command-palette__search">
+          <span class="bharat-command-palette__search-icon">🔍</span>
+          <input 
+            type="text" 
+            class="bharat-command-palette__input"
+            id="commandInput"
+            placeholder="Type a command..."
+            autocomplete="off"
+          >
+          <span class="bharat-command-palette__badge">Ctrl+K</span>
+        </div>
+        <div class="bharat-command-palette__results" id="commandResults">
+          <!-- Results inserted dynamically -->
+        </div>
+        <div class="bharat-command-palette__footer">
+          <div class="bharat-command-palette__footer-keys">
+            <span class="bharat-command-palette__footer-key"><kbd>↑↓</kbd> Navigate</span>
+            <span class="bharat-command-palette__footer-key"><kbd>↵</kbd> Select</span>
+            <span class="bharat-command-palette__footer-key"><kbd>Esc</kbd> Close</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Context Menu -->
+    <div class="bharat-context-menu" id="contextMenu">
+      <div class="bharat-context-menu__item" onclick="bharatApp.contextAction('back')">
+        <span class="bharat-context-menu__item-icon">←</span> Back
+        <span class="bharat-context-menu__item-shortcut">Alt+←</span>
+      </div>
+      <div class="bharat-context-menu__item" onclick="bharatApp.contextAction('forward')">
+        <span class="bharat-context-menu__item-icon">→</span> Forward
+        <span class="bharat-context-menu__item-shortcut">Alt+→</span>
+      </div>
+      <div class="bharat-context-menu__item" onclick="bharatApp.contextAction('refresh')">
+        <span class="bharat-context-menu__item-icon">⟳</span> Reload
+        <span class="bharat-context-menu__item-shortcut">Ctrl+R</span>
+      </div>
+      <div class="bharat-context-menu__divider"></div>
+      <div class="bharat-context-menu__item" onclick="bharatApp.contextAction('bookmark')">
+        <span class="bharat-context-menu__item-icon">☆</span> Bookmark This Page
+        <span class="bharat-context-menu__item-shortcut">Ctrl+D</span>
+      </div>
+      <div class="bharat-context-menu__item" onclick="bharatApp.contextAction('focus')">
+        <span class="bharat-context-menu__item-icon">👁</span> Focus Mode
+      </div>
+      <div class="bharat-context-menu__divider"></div>
+      <div class="bharat-context-menu__item" onclick="bharatApp.contextAction('ai')">
+        <span class="bharat-context-menu__item-icon">✨</span> Ask Bharat AI
+        <span class="bharat-context-menu__item-shortcut">Ctrl+J</span>
+      </div>
+      <div class="bharat-context-menu__item" onclick="bharatApp.contextAction('inspect')">
+        <span class="bharat-context-menu__item-icon">🔧</span> Inspect Element
+        <span class="bharat-context-menu__item-shortcut">Ctrl+Shift+I</span>
+      </div>
+    </div>
+
+    <!-- Add Shortcut Modal -->
+    <div class="bharat-modal" id="addShortcutModal">
+      <div class="bharat-modal__content">
+        <h3 class="bharat-modal__title">Add Shortcut</h3>
+        <div class="bharat-modal__input-group">
+          <label>Name</label>
+          <input type="text" id="shortcutNameInput" placeholder="e.g. Facebook">
+        </div>
+        <div class="bharat-modal__input-group">
+          <label>URL</label>
+          <input type="text" id="shortcutUrlInput" placeholder="e.g. https://facebook.com">
+        </div>
+        <div class="bharat-modal__input-group">
+          <label>Icon (Emoji)</label>
+          <input type="text" id="shortcutIconInput" placeholder="e.g. 📘">
+        </div>
+        <div class="bharat-modal__actions">
+          <button class="bharat-btn" onclick="bharatApp.closeAddShortcutModal()">Cancel</button>
+          <button class="bharat-btn bharat-btn-primary" onclick="bharatApp.saveCustomShortcut()">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div id="toastContainer"></div>
+
+    <!-- Overlay -->
+    <div class="bharat-overlay" id="overlay"></div>
+  </div>
+
+  <!-- Security Warning Overlay -->
+  <div class="bharat-security-warning" id="securityWarning">
+    <div class="bharat-security-warning__icon">⚠️</div>
+    <div class="bharat-security-warning__title">Dangerous Site Detected</div>
+    <div class="bharat-security-warning__desc" id="secWarningDesc">Bharat Shield has detected serious security risks on this website.</div>
+    <div class="bharat-security-warning__risk">
+      <span class="bharat-security-warning__risk-label">Risk Score:</span>
+      <span class="bharat-security-warning__risk-score" id="secWarningScore">0/100</span>
+    </div>
+    <div class="bharat-security-warning__url" id="secWarningUrl"></div>
+    <div class="bharat-security-warning__actions">
+      <button class="bharat-security-warning__btn bharat-security-warning__btn--primary" id="secWarningGoBack">← Go Back to Safety</button>
+      <button class="bharat-security-warning__btn bharat-security-warning__btn--secondary" id="secWarningProceed">Proceed Anyway →</button>
+    </div>
+  </div>
+
+  <!-- Download Protection Dialog -->
+  <div class="bharat-download-shield" id="downloadShield">
+    <div class="bharat-download-shield__card">
+      <div class="bharat-download-shield__header">
+        <div class="bharat-download-shield__icon">🚨</div>
+        <div>
+          <div class="bharat-download-shield__title">Risky Download Detected</div>
+          <div class="bharat-download-shield__subtitle">Bharat Shield has flagged this file</div>
+        </div>
+      </div>
+      <div class="bharat-download-shield__file-info">
+        <div class="bharat-download-shield__file-row">
+          <span class="bharat-download-shield__file-key">File Name</span>
+          <span class="bharat-download-shield__file-val" id="dlShieldFilename">—</span>
+        </div>
+        <div class="bharat-download-shield__file-row">
+          <span class="bharat-download-shield__file-key">File Type</span>
+          <span class="bharat-download-shield__file-val" id="dlShieldType">—</span>
+        </div>
+        <div class="bharat-download-shield__file-row">
+          <span class="bharat-download-shield__file-key">Source</span>
+          <span class="bharat-download-shield__file-val" id="dlShieldSource">—</span>
+        </div>
+        <div class="bharat-download-shield__file-row">
+          <span class="bharat-download-shield__file-key">Risk Assessment</span>
+          <span class="bharat-download-shield__file-val" style="color:#ff6b6b" id="dlShieldScore">—</span>
+        </div>
+      </div>
+      <div class="bharat-download-shield__risks" id="dlShieldRisks">
+        <!-- Rendered by JS -->
+      </div>
+      <div class="bharat-download-shield__actions">
+        <button class="bharat-download-shield__btn bharat-download-shield__btn--allow" id="dlShieldAllow">Allow Download</button>
+        <button class="bharat-download-shield__btn bharat-download-shield__btn--block" id="dlShieldBlock">🚫 Block Download</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Permission Guardian Modal -->
+  <div class="bharat-permission-guard" id="permissionGuard">
+    <div class="bharat-permission-guard__header">
+      <span class="bharat-permission-guard__icon">🔐</span>
+      <span class="bharat-permission-guard__title">Permission Request Detected</span>
+    </div>
+    <div class="bharat-permission-guard__site" id="permGuardSite">—</div>
+    <div class="bharat-permission-guard__risk" id="permGuardRisk">
+      <span id="permGuardRiskIcon">⚠️</span>
+      <span id="permGuardRiskText">Analyzing...</span>
+    </div>
+    <div class="bharat-permission-guard__reason" id="permGuardReason"></div>
+    <div class="bharat-permission-guard__actions">
+      <button class="bharat-permission-guard__btn bharat-permission-guard__btn--deny" id="permGuardDeny">Deny</button>
+      <button class="bharat-permission-guard__btn bharat-permission-guard__btn--allow" id="permGuardAllow">Allow</button>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="js/theme-engine.js"></script>
+  <script src="js/tab-manager.js"></script>
+  <script src="js/command-palette.js"></script>
+  <script src="js/ai-assistant.js"></script>
+  <script src="js/focus-mode.js"></script>
+
+  <script src="js/security.js"></script>
+  <script src="js/bharat-shield.js"></script>
+  <script src="js/security-dashboard.js"></script>
+  <script src="js/history-manager.js"></script>
+  <script src="js/games/runner.js"></script>
+  <script src="js/games/puzzle.js"></script>
+  <script src="js/games/strategy.js"></script>
+  <script src="js/privacy-manager.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>
